@@ -1,6 +1,11 @@
 import { NewNoteCard } from '@/components/new-note-card'
 import { NoteCard } from '@/components/note-card'
 
+const note = {
+  date: new Date(),
+  content: 'ola',
+}
+
 export default function Home() {
   return (
     <main className="mx-auto max-w-6xl space-y-6 py-12">
@@ -31,12 +36,8 @@ export default function Home() {
       <div className="grid auto-rows-[15.625rem] grid-cols-3 gap-6">
         <NewNoteCard />
 
-        <NoteCard />
-        <NoteCard />
-        <NoteCard />
-        <NoteCard />
-        <NoteCard />
-        <NoteCard />
+        <NoteCard note={note} />
+        <NoteCard note={note} />
       </div>
     </main>
   )
