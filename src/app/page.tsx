@@ -1,12 +1,41 @@
+'use client'
+
+import { useState } from 'react'
 import { NewNoteCard } from '@/components/new-note-card'
 import { NoteCard } from '@/components/note-card'
 
-const note = {
-  date: new Date(),
-  content: 'ola',
+interface NoteProps {
+  id: string
+  date: Date
+  content: string
 }
 
 export default function Home() {
+  const isBrowser = typeof window !== 'undefined'
+  const [notes, setNotes] = useState<NoteProps[]>(() => {
+    const notesOnStorage = isBrowser && localStorage.getItem('notes')
+
+    if (notesOnStorage) {
+      return JSON.parse(notesOnStorage)
+    }
+
+    return []
+  })
+
+  const onNoteCreated = (content: string) => {
+    const newNote = {
+      id: crypto.randomUUID(),
+      date: new Date(),
+      content,
+    }
+
+    const notesArray = [newNote, ...notes]
+
+    setNotes(notesArray)
+
+    localStorage.setItem('notes', JSON.stringify(notesArray))
+  }
+
   return (
     <main className="mx-auto max-w-6xl space-y-6 py-12">
       <svg
@@ -34,10 +63,11 @@ export default function Home() {
       <hr className="h-px bg-slate-700" />
 
       <div className="grid auto-rows-[15.625rem] grid-cols-3 gap-6">
-        <NewNoteCard />
+        <NewNoteCard onNoteCreated={onNoteCreated} />
 
-        <NoteCard note={note} />
-        <NoteCard note={note} />
+        {notes.map((note) => (
+          <NoteCard key={note.id} note={note} />
+        ))}
       </div>
     </main>
   )

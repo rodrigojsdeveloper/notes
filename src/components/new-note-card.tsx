@@ -5,7 +5,11 @@ import { X } from 'lucide-react'
 import { FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
-export const NewNoteCard = () => {
+interface NewNoteCardProps {
+  onNoteCreated: (content: string) => void
+}
+
+export const NewNoteCard = ({ onNoteCreated }: NewNoteCardProps) => {
   const [shouldShowOnboarding, setShouldShowOnboarding] =
     useState<boolean>(true)
   const [content, setContent] = useState<string>('')
@@ -16,6 +20,9 @@ export const NewNoteCard = () => {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
+    onNoteCreated(content)
+    setContent('')
+    setShouldShowOnboarding(true)
     toast.success('Nota criada')
   }
 
@@ -69,6 +76,7 @@ export const NewNoteCard = () => {
                   }}
                   className="flex-1 resize-none bg-transparent text-sm leading-6 text-slate-400"
                   required
+                  value={content}
                 />
               )}
             </div>
