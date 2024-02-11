@@ -9,10 +9,13 @@ interface NewNoteCardProps {
   onNoteCreated: (content: string) => void
 }
 
+let speechRecognition: SpeechRecognition | null = null
+
 export const NewNoteCard = ({ onNoteCreated }: NewNoteCardProps) => {
   const [shouldShowOnboarding, setShouldShowOnboarding] =
     useState<boolean>(true)
   const [content, setContent] = useState<string>('')
+  const [isRecording, setIsRecording] = useState<boolean>(false)
 
   const handleShouldShowOnboarding = () => {
     setShouldShowOnboarding(!shouldShowOnboarding)
@@ -20,10 +23,61 @@ export const NewNoteCard = ({ onNoteCreated }: NewNoteCardProps) => {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
+
+    if (content === '') {
+      return
+    }
+
     onNoteCreated(content)
     setContent('')
     setShouldShowOnboarding(true)
     toast.success('Nota criada')
+  }
+
+  const handleStartRecording = () => {
+    const isSpeechRecognitionAPIAavailable =
+      'SpeechRecognition' in window || 'webkitSpeechrecognition'
+
+    if (!isSpeechRecognitionAPIAavailable) {
+      alert('Infelizmente seu navegador não suporta a API da gravação!')
+      return
+    }
+
+    setIsRecording(true)
+    handleShouldShowOnboarding()
+
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition
+
+    speechRecognition = new SpeechRecognitionAPI()
+
+    speechRecognition.lang = 'pt-BR'
+    speechRecognition.continuous = true
+    speechRecognition.maxAlternatives = 1
+    speechRecognition.interimResults = true
+
+    speechRecognition.onresult = (event) => {
+      const transcription = Array.from(event.results).reduce(
+        (text, result) => text.concat(result[0].transcript),
+        '',
+      )
+
+      setContent(transcription)
+    }
+
+    speechRecognition.onerror = (event) => {
+      console.error(event)
+    }
+
+    speechRecognition.start()
+  }
+
+  const handleStopRecording = () => {
+    setIsRecording(false)
+
+    if (speechRecognition !== null) {
+      speechRecognition.stop()
+    }
   }
 
   return (
@@ -44,7 +98,7 @@ export const NewNoteCard = ({ onNoteCreated }: NewNoteCardProps) => {
             <X className="size-5" />
           </Dialog.Close>
 
-          <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+          <form className="flex flex-1 flex-col">
             <div className="flex flex-1 flex-col gap-3 p-5">
               <h2 className="text-sm font-medium text-slate-200">
                 Adicionar nota
@@ -53,11 +107,16 @@ export const NewNoteCard = ({ onNoteCreated }: NewNoteCardProps) => {
               {shouldShowOnboarding ? (
                 <p className="text-sm font-medium leading-6 text-slate-400">
                   Comece{' '}
-                  <button className="text-lime-400 hover:underline">
+                  <button
+                    type="button"
+                    className="text-lime-400 hover:underline"
+                    onClick={handleStartRecording}
+                  >
                     gravando uma nota
                   </button>{' '}
                   em áudio ou se preferir{' '}
                   <button
+                    type="button"
                     onClick={handleShouldShowOnboarding}
                     className="text-lime-400 hover:underline"
                   >
@@ -81,12 +140,27 @@ export const NewNoteCard = ({ onNoteCreated }: NewNoteCardProps) => {
               )}
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-lime-400 py-4 text-center text-sm font-medium text-lime-950 hover:bg-lime-500"
-            >
-              Salvar
-            </button>
+            {isRecording ? (
+              <button
+                type="button"
+                onClick={handleStopRecording}
+                className="flex w-full items-center justify-center gap-2 bg-slate-900 py-4 text-center text-sm font-medium text-slate-300 hover:text-slate-100"
+              >
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+                </span>
+                Gravando! (clique p/ interromper)
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="w-full bg-lime-400 py-4 text-center text-sm font-medium text-lime-950 hover:bg-lime-500"
+              >
+                Salvar
+              </button>
+            )}
           </form>
         </Dialog.Content>
       </Dialog.Portal>
