@@ -46,12 +46,19 @@ export default function Home() {
   const filteredNotes =
     search !== ''
       ? notes.filter((note) =>
-        note.content.toLowerCase().includes(search.toLowerCase()),
-      )
+          note.content.toLowerCase().includes(search.toLowerCase()),
+        )
       : notes
 
+  const onNoteDeleted = (id: string) => {
+    const notesArray = notes.filter((note) => note.id !== id)
+
+    setNotes(notesArray)
+    localStorage.setItem('notes', JSON.stringify(notesArray))
+  }
+
   return (
-    <main className="mx-auto max-w-6xl space-y-6 py-12">
+    <main className="mx-auto max-w-6xl space-y-6 px-5 py-12">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="125"
@@ -77,11 +84,11 @@ export default function Home() {
 
       <hr className="h-px bg-slate-700" />
 
-      <div className="grid auto-rows-[15.625rem] grid-cols-3 gap-6">
+      <div className="grid auto-rows-[15.625rem] grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <NewNoteCard onNoteCreated={onNoteCreated} />
 
         {filteredNotes.map((note) => (
-          <NoteCard key={note.id} note={note} />
+          <NoteCard key={note.id} note={note} onNoteDeleted={onNoteDeleted} />
         ))}
       </div>
     </main>
